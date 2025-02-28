@@ -143,15 +143,15 @@ void CLOCK_INHF_clock_init() {
      1be:	08 95       	ret
 
 000001c0 <crc6_mt6701_lookup>:
-	0x3B, 0x38, 0x3D, 0x3E, 0x37, 0x34, 0x31, 0x32,
-	0x13, 0x10, 0x15, 0x16, 0x1F, 0x1C, 0x19, 0x1A,
-	0x0B, 0x08, 0x0D, 0x0E, 0x07, 0x04, 0x01, 0x02,
-};
-
-uint8_t crc6_mt6701_lookup(uint32_t data) { //crc calculations using lookup table
+ * @brief Calculates the CRC-6 checksum using a lookup table.
+ * 
+ * @param data 18-bit data word (excluding CRC) from the MT6701 sensor.
+ * @return Computed 6-bit CRC value.
+ */
+uint8_t crc6_mt6701_lookup(uint32_t data) {
      1c0:	0f 93       	push	r16
      1c2:	1f 93       	push	r17
-	return crc6_table[crc6_table[crc6_table[0 ^ ((data >> 12) & 0x3F)] ^ ((data >> 6) & 0x3F)] ^ (data & 0x3F)];
+    return crc6_table[crc6_table[crc6_table[0 ^ ((data >> 12) & 0x3F)] ^ ((data >> 6) & 0x3F)] ^ (data & 0x3F)];
      1c4:	8b 01       	movw	r16, r22
      1c6:	9c 01       	movw	r18, r24
      1c8:	0f 2e       	mov	r0, r31
@@ -207,18 +207,22 @@ uint8_t crc6_mt6701_lookup(uint32_t data) { //crc calculations using lookup tabl
      22a:	08 95       	ret
 
 0000022c <MT6701CRC>:
-
-uint8_t MT6701CRC(uint32_t *data){ //function modifies initilization data values by removing crc (last 6 bites) and return 0 if crc is correct
+ *
+ * @param[in,out] data Pointer to the 24-bit data word with CRC.
+ *                     The function modifies this value by removing the last 6 bits (CRC).
+ * @return 0 if the CRC is correct, 1 otherwise.
+ */
+uint8_t MT6701CRC(uint32_t *data) {
      22c:	cf 93       	push	r28
      22e:	fc 01       	movw	r30, r24
-    uint8_t received_crc = *data & 0x3F; //extracting only crc from data
+    uint8_t received_crc = *data & 0x3F; ///< Extract the CRC (last 6 bits)
      230:	80 81       	ld	r24, Z
      232:	91 81       	ldd	r25, Z+1	; 0x01
      234:	a2 81       	ldd	r26, Z+2	; 0x02
      236:	b3 81       	ldd	r27, Z+3	; 0x03
      238:	c8 2f       	mov	r28, r24
      23a:	cf 73       	andi	r28, 0x3F	; 63
-    *data = *data >> 6;   // removing crc and leaving only real data (without CRC)
+    *data = *data >> 6; ///< Remove CRC, leaving only the actual data
      23c:	bc 01       	movw	r22, r24
      23e:	cd 01       	movw	r24, r26
      240:	68 94       	set
@@ -233,9 +237,9 @@ uint8_t MT6701CRC(uint32_t *data){ //function modifies initilization data values
      252:	71 83       	std	Z+1, r23	; 0x01
      254:	82 83       	std	Z+2, r24	; 0x02
      256:	93 83       	std	Z+3, r25	; 0x03
-    uint8_t calculated_crc = crc6_mt6701_lookup(*data);
+    uint8_t calculated_crc = crc6_mt6701_lookup(*data); ///< Compute expected CRC
      258:	0e 94 e0 00 	call	0x1c0	; 0x1c0 <crc6_mt6701_lookup>
-	return received_crc == calculated_crc ? 0 : 1; //return 0 if crc is correct and 1 if not
+    return received_crc == calculated_crc ? 0 : 1; ///< Return 0 if CRC matches, otherwise 1
      25c:	91 e0       	ldi	r25, 0x01	; 1
      25e:	c8 13       	cpse	r28, r24
      260:	01 c0       	rjmp	.+2      	; 0x264 <MT6701CRC+0x38>
@@ -245,52 +249,54 @@ uint8_t MT6701CRC(uint32_t *data){ //function modifies initilization data values
      268:	08 95       	ret
 
 0000026a <GPIO_init>:
+ * - PB2 as TX for dummy data sending with pull-up enabled.
+ * - PB3 as RX (MISO, MT6701 DO) with pull-up enabled.
+ * - PA7 as SS (MT6701 CSN) output, initially set high.
  */
-
-#include "Settings.h"
-
 void GPIO_init(){
-    PORTMUX.USARTROUTEA = PORTMUX_USART0_DEFAULT_gc; // Set USART0 to default pins
+    PORTMUX.USARTROUTEA = PORTMUX_USART0_DEFAULT_gc; ///< Set USART0 to default pins
      26a:	10 92 e2 05 	sts	0x05E2, r1	; 0x8005e2 <crc6_table+0x7f75b6>
 
-    PORTB.DIRSET = PIN1_bm | PIN2_bm; // Set PB1 as XCK (MT6701 CLK) out and PB2 as TX for dummy data sending
+    PORTB.DIRSET = PIN1_bm | PIN2_bm; ///< Set PB1 as XCK (MT6701 CLK) out and PB2 as TX for dummy data sending
      26e:	e0 e2       	ldi	r30, 0x20	; 32
      270:	f4 e0       	ldi	r31, 0x04	; 4
      272:	86 e0       	ldi	r24, 0x06	; 6
      274:	81 83       	std	Z+1, r24	; 0x01
-	PORTB.PIN2CTRL = PORT_PULLUPEN_bm; // Enable pull-up for PB2 (USART0 TX)
+    PORTB.PIN2CTRL = PORT_PULLUPEN_bm; ///< Enable pull-up for PB2 (USART0 TX)
      276:	88 e0       	ldi	r24, 0x08	; 8
      278:	82 8b       	std	Z+18, r24	; 0x12
-	//PORTB.PIN1CTRL = PORT_INVEN_bm; //For mt6701 need to use not inverted pin with enabled UCPHA (view USART.c). Uncomment if need to invert
-    PORTB.DIRCLR = PIN3_bm; // Set PA3 as input (USART0 RX as MISO (MT6701 DO))
+    //PORTB.PIN1CTRL = PORT_INVEN_bm; ///< Uncomment if signal inversion is needed
+    
+    PORTB.DIRCLR = PIN3_bm; ///< Set PB3 as input (USART0 RX as MISO (MT6701 DO))
      27a:	82 83       	std	Z+2, r24	; 0x02
-    PORTB.PIN3CTRL = PORT_PULLUPEN_bm; // Enable pull-up for PB3 (USART0 RX)
+    PORTB.PIN3CTRL = PORT_PULLUPEN_bm; ///< Enable pull-up for PB3 (USART0 RX)
      27c:	83 8b       	std	Z+19, r24	; 0x13
 
-	PORTA.DIRSET = PIN7_bm; // Set PA7 set as SS (MT6701 CSN)
+    PORTA.DIRSET = PIN7_bm; ///< Set PA7 as SS (MT6701 CSN)
      27e:	e0 e0       	ldi	r30, 0x00	; 0
      280:	f4 e0       	ldi	r31, 0x04	; 4
      282:	80 e8       	ldi	r24, 0x80	; 128
      284:	81 83       	std	Z+1, r24	; 0x01
-	PORTA.OUTSET = PIN7_bm; // and keep it high
+    PORTA.OUTSET = PIN7_bm; ///< Keep SS high
      286:	85 83       	std	Z+5, r24	; 0x05
      288:	08 95       	ret
 
 0000028a <main>:
-
-#include "Settings.h"
-
+ *
+ * @return int (not used, since the function never exits).
+ */
 int main(void)
 {
-    CLOCK_INHF_clock_init();
+    CLOCK_INHF_clock_init(); ///< Initialize system clock
      28a:	0e 94 d1 00 	call	0x1a2	; 0x1a2 <CLOCK_INHF_clock_init>
-    GPIO_init();
+    GPIO_init(); ///< Initialize GPIO pins
      28e:	0e 94 35 01 	call	0x26a	; 0x26a <GPIO_init>
-    USART0_init();
+    USART0_init(); ///< Initialize USART0 for SPI communication
      292:	0e 94 bc 01 	call	0x378	; 0x378 <USART0_init>
+
     while (1) 
     {
-		MT6701_SSI_Angle(); //Reading sensor every ~100mS
+        MT6701_SSI_Angle(); ///< Read MT6701 sensor data
      296:	0e 94 57 01 	call	0x2ae	; 0x2ae <MT6701_SSI_Angle>
 	#else
 		//round up by default
@@ -310,12 +316,12 @@ int main(void)
      2ac:	f4 cf       	rjmp	.-24     	; 0x296 <main+0xc>
 
 000002ae <MT6701_SSI_Angle>:
- *  Author: Saulius
- */ 
- #include "Settings.h"
- #include "MT6701Var.h"
-
- void MT6701_SSI_Angle(){
+ * This function initiates an SSI communication session by pulling the chip select (CSN) low,
+ * transmitting dummy data to generate a clock signal, and receiving the corresponding data bits.
+ * The received data is then processed to extract the angle, magnetic field status, push button status,
+ * and track status.
+ */
+void MT6701_SSI_Angle() {
      2ae:	0f 93       	push	r16
      2b0:	1f 93       	push	r17
      2b2:	cf 93       	push	r28
@@ -324,26 +330,27 @@ int main(void)
      2b8:	00 d0       	rcall	.+0      	; 0x2ba <MT6701_SSI_Angle+0xc>
      2ba:	cd b7       	in	r28, 0x3d	; 61
      2bc:	de b7       	in	r29, 0x3e	; 62
-	uint32_t received_data = 0;
+    uint32_t received_data = 0;
      2be:	19 82       	std	Y+1, r1	; 0x01
      2c0:	1a 82       	std	Y+2, r1	; 0x02
      2c2:	1b 82       	std	Y+3, r1	; 0x03
      2c4:	1c 82       	std	Y+4, r1	; 0x04
- 	USART0.STATUS = USART_TXCIF_bm; //clearing frame flag before data collecting
+    USART0.STATUS = USART_TXCIF_bm; ///< Clear frame flag before data collection
      2c6:	80 e4       	ldi	r24, 0x40	; 64
      2c8:	80 93 04 08 	sts	0x0804, r24	; 0x800804 <crc6_table+0x7f77d8>
- 	PORTA.OUTCLR = PIN7_bm; //pull CSN Low
+    PORTA.OUTCLR = PIN7_bm; ///< Pull CSN low to start communication
      2cc:	80 e8       	ldi	r24, 0x80	; 128
      2ce:	80 93 06 04 	sts	0x0406, r24	; 0x800406 <crc6_table+0x7f73da>
- 	while(!(USART0.STATUS & USART_TXCIF_bm)){
+    
+    while (!(USART0.STATUS & USART_TXCIF_bm)) {
      2d2:	17 c0       	rjmp	.+46     	; 0x302 <MT6701_SSI_Angle+0x54>
-	 	for (uint8_t i = 0; i<3; i++){ // 3x8 = 24bits of data
-		 	USART0_sendChar('o');// sending dummy data  (8bits) for XCK (CLK) generation
+        for (uint8_t i = 0; i < 3; i++) { ///< 3 bytes (24 bits) of data
+            USART0_sendChar('o'); ///< Send dummy data (8 bits) for clock generation
      2d4:	8f e6       	ldi	r24, 0x6F	; 111
      2d6:	0e 94 c7 01 	call	0x38e	; 0x38e <USART0_sendChar>
-		 	uint8_t received_byte = USART0_readChar();  // reading 8 bits of data (DO)
+            uint8_t received_byte = USART0_readChar(); ///< Read 8 bits of received data
      2da:	0e 94 ce 01 	call	0x39c	; 0x39c <USART0_readChar>
-		 	received_data <<= 8;  // shift previous data to left
+            received_data <<= 8; ///< Shift previous data left by 8 bits
      2de:	49 81       	ldd	r20, Y+1	; 0x01
      2e0:	5a 81       	ldd	r21, Y+2	; 0x02
      2e2:	6b 81       	ldd	r22, Y+3	; 0x03
@@ -352,42 +359,42 @@ int main(void)
      2e8:	65 2f       	mov	r22, r21
      2ea:	54 2f       	mov	r21, r20
      2ec:	44 27       	eor	r20, r20
-		 	received_data |= received_byte;  // and add current data
+            received_data |= received_byte; ///< Append current received byte
      2ee:	48 2b       	or	r20, r24
      2f0:	49 83       	std	Y+1, r20	; 0x01
      2f2:	5a 83       	std	Y+2, r21	; 0x02
      2f4:	6b 83       	std	Y+3, r22	; 0x03
      2f6:	7c 83       	std	Y+4, r23	; 0x04
- void MT6701_SSI_Angle(){
-	uint32_t received_data = 0;
- 	USART0.STATUS = USART_TXCIF_bm; //clearing frame flag before data collecting
- 	PORTA.OUTCLR = PIN7_bm; //pull CSN Low
- 	while(!(USART0.STATUS & USART_TXCIF_bm)){
-	 	for (uint8_t i = 0; i<3; i++){ // 3x8 = 24bits of data
+    uint32_t received_data = 0;
+    USART0.STATUS = USART_TXCIF_bm; ///< Clear frame flag before data collection
+    PORTA.OUTCLR = PIN7_bm; ///< Pull CSN low to start communication
+    
+    while (!(USART0.STATUS & USART_TXCIF_bm)) {
+        for (uint8_t i = 0; i < 3; i++) { ///< 3 bytes (24 bits) of data
      2f8:	1f 5f       	subi	r17, 0xFF	; 255
      2fa:	01 c0       	rjmp	.+2      	; 0x2fe <MT6701_SSI_Angle+0x50>
      2fc:	10 e0       	ldi	r17, 0x00	; 0
      2fe:	13 30       	cpi	r17, 0x03	; 3
      300:	48 f3       	brcs	.-46     	; 0x2d4 <MT6701_SSI_Angle+0x26>
-
- void MT6701_SSI_Angle(){
-	uint32_t received_data = 0;
- 	USART0.STATUS = USART_TXCIF_bm; //clearing frame flag before data collecting
- 	PORTA.OUTCLR = PIN7_bm; //pull CSN Low
- 	while(!(USART0.STATUS & USART_TXCIF_bm)){
+void MT6701_SSI_Angle() {
+    uint32_t received_data = 0;
+    USART0.STATUS = USART_TXCIF_bm; ///< Clear frame flag before data collection
+    PORTA.OUTCLR = PIN7_bm; ///< Pull CSN low to start communication
+    
+    while (!(USART0.STATUS & USART_TXCIF_bm)) {
      302:	80 91 04 08 	lds	r24, 0x0804	; 0x800804 <crc6_table+0x7f77d8>
      306:	86 ff       	sbrs	r24, 6
      308:	f9 cf       	rjmp	.-14     	; 0x2fc <MT6701_SSI_Angle+0x4e>
-		 	uint8_t received_byte = USART0_readChar();  // reading 8 bits of data (DO)
-		 	received_data <<= 8;  // shift previous data to left
-		 	received_data |= received_byte;  // and add current data
-	 	}
- 	}// repeating until all frame will be send
- 	PORTA.OUTSET = PIN7_bm; //pull CSN on high (USART SPI MODE don't have integrated SS (CSN) control
+            received_data <<= 8; ///< Shift previous data left by 8 bits
+            received_data |= received_byte; ///< Append current received byte
+        }
+    } ///< Repeat until the full frame is received
+    
+    PORTA.OUTSET = PIN7_bm; ///< Pull CSN high (USART SPI mode does not have integrated SS control)
      30a:	80 e8       	ldi	r24, 0x80	; 128
      30c:	80 93 05 04 	sts	0x0405, r24	; 0x800405 <crc6_table+0x7f73d9>
-
-	MT6701.CRCError = MT6701CRC(&received_data); // check and remove crc from received data
+    
+    MT6701.CRCError = MT6701CRC(&received_data); ///< Verify and remove CRC from received data
      310:	ce 01       	movw	r24, r28
      312:	01 96       	adiw	r24, 0x01	; 1
      314:	0e 94 16 01 	call	0x22c	; 0x22c <MT6701CRC>
@@ -395,7 +402,7 @@ int main(void)
      31a:	18 e3       	ldi	r17, 0x38	; 56
      31c:	f8 01       	movw	r30, r16
      31e:	87 83       	std	Z+7, r24	; 0x07
-	MT6701.MagneticFieldStatus = (received_data & 0xf) & 0x3; //extracting magnetic field status
+    MT6701.MagneticFieldStatus = (received_data & 0xF) & 0x3; ///< Extract magnetic field status
      320:	89 81       	ldd	r24, Y+1	; 0x01
      322:	9a 81       	ldd	r25, Y+2	; 0x02
      324:	ab 81       	ldd	r26, Y+3	; 0x03
@@ -403,15 +410,15 @@ int main(void)
      328:	28 2f       	mov	r18, r24
      32a:	23 70       	andi	r18, 0x03	; 3
      32c:	24 83       	std	Z+4, r18	; 0x04
-	MT6701.PushButtonStatus = (received_data & 0xf) & 0x4; //extracting push button status
+    MT6701.PushButtonStatus = (received_data & 0xF) & 0x4; ///< Extract push button status
      32e:	28 2f       	mov	r18, r24
      330:	24 70       	andi	r18, 0x04	; 4
      332:	25 83       	std	Z+5, r18	; 0x05
-	MT6701.TrackStatus = (received_data & 0xf) & 0x8; // extrackting track status
+    MT6701.TrackStatus = (received_data & 0xF) & 0x8; ///< Extract track status
      334:	28 2f       	mov	r18, r24
      336:	28 70       	andi	r18, 0x08	; 8
      338:	26 83       	std	Z+6, r18	; 0x06
-	MT6701.Angle = (double)(received_data >> 4)/45.51111111; //45.511... same as (received_data>>4) / 16384 * 360
+    MT6701.Angle = (double)(received_data >> 4) / 45.51111111; ///< Compute angle in degrees (received_data >> 4) / 16384 * 360
      33a:	bc 01       	movw	r22, r24
      33c:	cd 01       	movw	r24, r26
      33e:	68 94       	set
@@ -433,7 +440,6 @@ int main(void)
      362:	71 83       	std	Z+1, r23	; 0x01
      364:	82 83       	std	Z+2, r24	; 0x02
      366:	93 83       	std	Z+3, r25	; 0x03
-
      368:	24 96       	adiw	r28, 0x04	; 4
      36a:	cd bf       	out	0x3d, r28	; 61
      36c:	de bf       	out	0x3e, r29	; 62
@@ -444,51 +450,56 @@ int main(void)
      376:	08 95       	ret
 
 00000378 <USART0_init>:
-
-#include "Settings.h"
-
-
+ * This function configures USART0 to operate in SPI master mode with a baud rate of 500 kbps.
+ * It enables the receiver (MISO) and transmitter (for sending dummy data), and sets
+ * the SPI mode with data sampling on the trailing edge.
+ */
 void USART0_init() {
-	USART0.BAUD = (uint16_t)USART0_BAUD_RATE(500000); // Set baud rate to 0.5 Mbps
+    USART0.BAUD = (uint16_t)USART0_BAUD_RATE(500000); ///< Set baud rate to 0.5 Mbps
      378:	e0 e0       	ldi	r30, 0x00	; 0
      37a:	f8 e0       	ldi	r31, 0x08	; 8
      37c:	80 e0       	ldi	r24, 0x00	; 0
      37e:	95 e0       	ldi	r25, 0x05	; 5
      380:	80 87       	std	Z+8, r24	; 0x08
      382:	91 87       	std	Z+9, r25	; 0x09
-	USART0.CTRLB = USART_RXEN_bm | USART_TXEN_bm; // Enable RX as MISO, TX for dummy data sending
+    USART0.CTRLB = USART_RXEN_bm | USART_TXEN_bm; ///< Enable RX as MISO, TX for dummy data sending
      384:	80 ec       	ldi	r24, 0xC0	; 192
      386:	86 83       	std	Z+6, r24	; 0x06
-	USART0.CTRLC = USART_CMODE_MSPI_gc | USART_UCPHA_bm; // Configure as Host SPI and Data are sampled on the trailing (last) edge
+    USART0.CTRLC = USART_CMODE_MSPI_gc | USART_UCPHA_bm; ///< Configure as Host SPI, data sampled on the trailing edge
      388:	82 ec       	ldi	r24, 0xC2	; 194
      38a:	87 83       	std	Z+7, r24	; 0x07
      38c:	08 95       	ret
 
 0000038e <USART0_sendChar>:
-}
-
+ *
+ * This function waits for the data register to be empty before transmitting
+ * the provided character.
+ */
 void USART0_sendChar(char c) {
-	while (!(USART0.STATUS & USART_DREIF_bm)); // Wait for data register to be empty
+    while (!(USART0.STATUS & USART_DREIF_bm)); ///< Wait for data register to be empty
      38e:	90 91 04 08 	lds	r25, 0x0804	; 0x800804 <crc6_table+0x7f77d8>
      392:	95 ff       	sbrs	r25, 5
      394:	fc cf       	rjmp	.-8      	; 0x38e <USART0_sendChar>
-	USART0.TXDATAL = c; // Send character
+    USART0.TXDATAL = c; ///< Send character
      396:	80 93 02 08 	sts	0x0802, r24	; 0x800802 <crc6_table+0x7f77d6>
      39a:	08 95       	ret
 
 0000039c <USART0_readChar>:
-}
-
+ *
+ * This function clears the receive buffer before reading and waits
+ * for data to be received before returning the character.
+ */
 char USART0_readChar() {
-	USART0.STATUS = USART_RXCIF_bm; // Clear buffer before reading
+    USART0.STATUS = USART_RXCIF_bm; ///< Clear buffer before reading
      39c:	80 e8       	ldi	r24, 0x80	; 128
      39e:	80 93 04 08 	sts	0x0804, r24	; 0x800804 <crc6_table+0x7f77d8>
-	while (!(USART0.STATUS & USART_RXCIF_bm)); // Wait for data to be received
+    while (!(USART0.STATUS & USART_RXCIF_bm)); ///< Wait for data to be received
      3a2:	80 91 04 08 	lds	r24, 0x0804	; 0x800804 <crc6_table+0x7f77d8>
      3a6:	88 23       	and	r24, r24
      3a8:	e4 f7       	brge	.-8      	; 0x3a2 <USART0_readChar+0x6>
-	return USART0.RXDATAL; // Return received character
+    return USART0.RXDATAL; ///< Return received character
      3aa:	80 91 00 08 	lds	r24, 0x0800	; 0x800800 <crc6_table+0x7f77d4>
+}
      3ae:	08 95       	ret
 
 000003b0 <__divsf3>:

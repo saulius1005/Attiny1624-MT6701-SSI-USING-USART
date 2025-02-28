@@ -1,30 +1,40 @@
-/*
- * MT6701.c
+/**
+ * @file MT6701.c
+ * @brief Implementation of MT6701 sensor angle reading via SSI.
+ * @author Saulius
+ * @date 2025-02-28
+ */
+
+#include "Settings.h"
+#include "MT6701Var.h"
+
+/**
+ * @brief Reads the angular position from the MT6701 sensor using SSI communication.
  *
- * Created: 2025-02-28 18:06:57
- *  Author: Saulius
- */ 
- #include "Settings.h"
- #include "MT6701Var.h"
-
- void MT6701_SSI_Angle(){
-	uint32_t received_data = 0;
- 	USART0.STATUS = USART_TXCIF_bm; //clearing frame flag before data collecting
- 	PORTA.OUTCLR = PIN7_bm; //pull CSN Low
- 	while(!(USART0.STATUS & USART_TXCIF_bm)){
-	 	for (uint8_t i = 0; i<3; i++){ // 3x8 = 24bits of data
-		 	USART0_sendChar('o');// sending dummy data  (8bits) for XCK (CLK) generation
-		 	uint8_t received_byte = USART0_readChar();  // reading 8 bits of data (DO)
-		 	received_data <<= 8;  // shift previous data to left
-		 	received_data |= received_byte;  // and add current data
-	 	}
- 	}// repeating until all frame will be send
- 	PORTA.OUTSET = PIN7_bm; //pull CSN on high (USART SPI MODE don't have integrated SS (CSN) control
-
-	MT6701.CRCError = MT6701CRC(&received_data); // check and remove crc from received data
-	MT6701.MagneticFieldStatus = (received_data & 0xf) & 0x3; //extracting magnetic field status
-	MT6701.PushButtonStatus = (received_data & 0xf) & 0x4; //extracting push button status
-	MT6701.TrackStatus = (received_data & 0xf) & 0x8; // extrackting track status
-	MT6701.Angle = (double)(received_data >> 4)/45.51111111; //45.511... same as (received_data>>4) / 16384 * 360
-
- }
+ * This function initiates an SSI communication session by pulling the chip select (CSN) low,
+ * transmitting dummy data to generate a clock signal, and receiving the corresponding data bits.
+ * The received data is then processed to extract the angle, magnetic field status, push button status,
+ * and track status.
+ */
+void MT6701_SSI_Angle() {
+    uint32_t received_data = 0;
+    USART0.STATUS = USART_TXCIF_bm; ///< Clear frame flag before data collection
+    PORTA.OUTCLR = PIN7_bm; ///< Pull CSN low to start communication
+    
+    while (!(USART0.STATUS & USART_TXCIF_bm)) {
+        for (uint8_t i = 0; i < 3; i++) { ///< 3 bytes (24 bits) of data
+            USART0_sendChar('o'); ///< Send dummy data (8 bits) for clock generation
+            uint8_t received_byte = USART0_readChar(); ///< Read 8 bits of received data
+            received_data <<= 8; ///< Shift previous data left by 8 bits
+            received_data |= received_byte; ///< Append current received byte
+        }
+    } ///< Repeat until the full frame is received
+    
+    PORTA.OUTSET = PIN7_bm; ///< Pull CSN high (USART SPI mode does not have integrated SS control)
+    
+    MT6701.CRCError = MT6701CRC(&received_data); ///< Verify and remove CRC from received data
+    MT6701.MagneticFieldStatus = (received_data & 0xF) & 0x3; ///< Extract magnetic field status
+    MT6701.PushButtonStatus = (received_data & 0xF) & 0x4; ///< Extract push button status
+    MT6701.TrackStatus = (received_data & 0xF) & 0x8; ///< Extract track status
+    MT6701.Angle = (double)(received_data >> 4) / 45.51111111; ///< Compute angle in degrees (received_data >> 4) / 16384 * 360
+}

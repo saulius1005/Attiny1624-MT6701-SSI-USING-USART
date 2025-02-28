@@ -1,20 +1,39 @@
-/*
- * MT6701Var.h
- *
- * Created: 2025-02-28 18:10:17
- *  Author: Saulius
- */ 
-
+/**
+ * @file MT6701Var.h
+ * @brief Header file for defining the MT6701 sensor global variable.
+ * @author Saulius
+ * @date 2025-02-28
+ */
 
 #ifndef MT6701VAR_H_
 #define MT6701VAR_H_
 
-AngleSensorStatus MT6701 ={
-.Angle = 0.0, 
-.MagneticFieldStatus = 0, //0- Normal, 1- Magnetic Field is too Strong, 2- Magnetic Field is too Weak
-.PushButtonStatus = 0, // 0- Normal, 1- Push Button is Detected
-.TrackStatus = 0, // 0- Normal, 1- Loss of Track
-.CRCError = 0 // 0- Normal, 1- CRC Error
+/**
+ * @brief Global instance of AngleSensorStatus to store MT6701 sensor data.
+ *
+ * - MagneticFieldStatus:
+ *   - 0: Normal
+ *   - 1: Magnetic field too strong
+ *   - 2: Magnetic field too weak
+ *
+ * - PushButtonStatus:
+ *   - 0: Normal
+ *   - 1: Push button detected
+ *
+ * - TrackStatus:
+ *   - 0: Normal
+ *   - 1: Loss of track
+ *
+ * - CRCError:
+ *   - 0: Normal
+ *   - 1: CRC error detected
+ */
+AngleSensorStatus MT6701 = {
+    .Angle = 0.0,
+    .MagneticFieldStatus = 0,
+    .PushButtonStatus = 0,
+    .TrackStatus = 0,
+    .CRCError = 0
 };
 
 #endif /* MT6701VAR_H_ */
