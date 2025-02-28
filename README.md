@@ -1,5 +1,9 @@
 ## Wiring Diagram
 ![Ekrano kopija 2025-02-28 200515](https://github.com/user-attachments/assets/bb35be41-aedc-4e5e-bf0c-5c564f190bd9)
+![20250227_171625](https://github.com/user-attachments/assets/c4499e55-3a98-40d0-8347-e91b0e39dbab)
+![20250227_173758](https://github.com/user-attachments/assets/d19afbfd-b14b-4bda-8ef5-405ce5096fac)
+![20250227_173734](https://github.com/user-attachments/assets/851a25cf-c387-4861-8e6a-deb41baafc9a)
+
 
 * Red wire +5V
 * Black wire GND
