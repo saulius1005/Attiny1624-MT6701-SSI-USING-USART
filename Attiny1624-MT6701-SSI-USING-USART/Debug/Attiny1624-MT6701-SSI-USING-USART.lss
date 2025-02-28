@@ -143,12 +143,12 @@ void CLOCK_INHF_clock_init() {
      1be:	08 95       	ret
 
 000001c0 <crc6_mt6701_lookup>:
+	0x3B, 0x38, 0x3D, 0x3E, 0x37, 0x34, 0x31, 0x32,
 	0x13, 0x10, 0x15, 0x16, 0x1F, 0x1C, 0x19, 0x1A,
 	0x0B, 0x08, 0x0D, 0x0E, 0x07, 0x04, 0x01, 0x02,
 };
 
-// Optimizuotas CRC-6 skaièiavimas naudojant lookup lentelæ
-uint8_t crc6_mt6701_lookup(uint32_t data) {
+uint8_t crc6_mt6701_lookup(uint32_t data) { //crc calculations using lookup table
      1c0:	0f 93       	push	r16
      1c2:	1f 93       	push	r17
 	return crc6_table[crc6_table[crc6_table[0 ^ ((data >> 12) & 0x3F)] ^ ((data >> 6) & 0x3F)] ^ (data & 0x3F)];
@@ -208,7 +208,7 @@ uint8_t crc6_mt6701_lookup(uint32_t data) {
 
 0000022c <MT6701CRC>:
 
-uint8_t MT6701CRC(uint32_t *data){ //function modifies init data values by removing crc (last 6 bites) and return 0 if crc is correct
+uint8_t MT6701CRC(uint32_t *data){ //function modifies initilization data values by removing crc (last 6 bites) and return 0 if crc is correct
      22c:	cf 93       	push	r28
      22e:	fc 01       	movw	r30, r24
     uint8_t received_crc = *data & 0x3F; //extracting only crc from data
@@ -240,7 +240,6 @@ uint8_t MT6701CRC(uint32_t *data){ //function modifies init data values by remov
      25e:	c8 13       	cpse	r28, r24
      260:	01 c0       	rjmp	.+2      	; 0x264 <MT6701CRC+0x38>
      262:	90 e0       	ldi	r25, 0x00	; 0
-}
      264:	89 2f       	mov	r24, r25
      266:	cf 91       	pop	r28
      268:	08 95       	ret
