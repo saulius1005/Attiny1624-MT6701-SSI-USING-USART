@@ -4,10 +4,13 @@
 ![20250227_173758](https://github.com/user-attachments/assets/d19afbfd-b14b-4bda-8ef5-405ce5096fac)
 ![20250227_173734](https://github.com/user-attachments/assets/851a25cf-c387-4861-8e6a-deb41baafc9a)
 
+1.Desolder MT6701 and 10kΩ resistors from PCB
+2.Cut trace between 8 and 1 pin
+3.Solder back MT6701 only!
 
 * Red wire +5V
 * Black wire GND
-* Yellow wire CSN (MT6701 8 pin), Attiny1624 PA7 (5 pin)
+* Yellow wire CSN (MT6701 8 pin), Attiny1624 PA7 (5 pin) (yellow wire is not soldered to Analog Pad !!! This pad used as Hole for wire)
 * Green wire DO (MT6701 6 pin), Attiny1624 PB3 (6 pin)
 * White wire CLK (MT6701 7 pin), Attiny1624 PB1 (8 pin)
 
