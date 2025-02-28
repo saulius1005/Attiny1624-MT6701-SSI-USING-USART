@@ -1,10 +1,5 @@
 /**
- * @file GPIO.c
- * @brief GPIO Initialization for various peripherals and sensors
- * 
- * This file contains the initialization of GPIO pins for communication peripherals such as USART, TWI,
- * and for managing input/output for keypad and sensor interfaces. It configures the appropriate pins for
- * USART, I2C, and other functionalities like keypad scanning and sensor input.
+ * GPIO.c
  * 
  * Created: 2024-12-04 16:54:46
  * Author: Saulius
@@ -12,27 +7,15 @@
 
 #include "Settings.h"
 
-/**
- * @brief Initializes GPIO pins for USART, TWI, keypad, and sensor interfaces.
- * 
- * This function configures the GPIO pins for various communication protocols and sensors. 
- * - Sets USART0 and USART1 pins for transmitting/receiving data.
- * - Configures I2C pins (SDA and SCL) for communication.
- * - Initializes keypad pins (rows and columns) for input.
- * - Configures ADC pins for wind speed, wind direction, and sun light sensor readings.
- * 
- * It also configures pull-up resistors for specific pins and sets the appropriate output logic levels.
- */
 void GPIO_init(){
-    // Configure USART0 and USART1 pin routing
-    PORTMUX.USARTROUTEA = PORTMUX_USART0_DEFAULT_gc | PORTMUX_USART1_DEFAULT_gc; // Set USART0 to alternative pins set 1, USART1 to default pins
+    PORTMUX.USARTROUTEA = PORTMUX_USART0_DEFAULT_gc; // Set USART0 to default pins
 
-    PORTB.DIRSET = PIN1_bm; // Set PB2 as XCK out
-	//PORTB.OUTSET = PIN1_bm;// set xck high
-	//PORTB.PIN1CTRL = PORT_INVEN_bm;
-    PORTB.DIRCLR = PIN3_bm; // Set PA3 as input (USART0 RX)
-    PORTB.PIN3CTRL = PORT_PULLUPEN_bm; // Enable pull-up for PA3 (USART0 RX)
+    PORTB.DIRSET = PIN1_bm | PIN2_bm; // Set PB1 as XCK (MT6701 CLK) out and PB2 as TX for dummy data sending
+	PORTB.PIN2CTRL = PORT_PULLUPEN_bm; // Enable pull-up for PB2 (USART0 TX)
+	//PORTB.PIN1CTRL = PORT_INVEN_bm; //For mt6701 need to use not inverted pin with enabled UCPHA (view USART.c). Uncomment if need to invert
+    PORTB.DIRCLR = PIN3_bm; // Set PA3 as input (USART0 RX as MISO (MT6701 DO))
+    PORTB.PIN3CTRL = PORT_PULLUPEN_bm; // Enable pull-up for PB3 (USART0 RX)
 
-	PORTA.DIRSET = PIN7_bm; // Set PA7 set as SS
-	PORTA.OUTSET = PIN7_bm;
+	PORTA.DIRSET = PIN7_bm; // Set PA7 set as SS (MT6701 CSN)
+	PORTA.OUTSET = PIN7_bm; // and keep it high
 }

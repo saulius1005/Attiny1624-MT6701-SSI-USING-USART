@@ -41,6 +41,7 @@ C_SRCS +=  \
 ../CRC.c \
 ../GPIO.c \
 ../main.c \
+../MT6701.c \
 ../USART.c
 
 
@@ -55,6 +56,7 @@ CLK.o \
 CRC.o \
 GPIO.o \
 main.o \
+MT6701.o \
 USART.o
 
 OBJS_AS_ARGS +=  \
@@ -62,6 +64,7 @@ CLK.o \
 CRC.o \
 GPIO.o \
 main.o \
+MT6701.o \
 USART.o
 
 C_DEPS +=  \
@@ -69,6 +72,7 @@ CLK.d \
 CRC.d \
 GPIO.d \
 main.d \
+MT6701.d \
 USART.d
 
 C_DEPS_AS_ARGS +=  \
@@ -76,6 +80,7 @@ CLK.d \
 CRC.d \
 GPIO.d \
 main.d \
+MT6701.d \
 USART.d
 
 OUTPUT_FILE_PATH +=Attiny1624-MT6701-SSI-USING-USART.elf
@@ -114,6 +119,13 @@ LINKER_SCRIPT_DEP+=
 	
 
 ./main.o: .././main.c
+	@echo Building file: $<
+	@echo Invoking: AVR/GNU C Compiler : 5.4.0
+	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG -DDEBUG  -I"C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATtiny_DFP\2.0.368\include"  -Og -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -g2 -Wall -mmcu=attiny1624 -B "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATtiny_DFP\2.0.368\gcc\dev\attiny1624" -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<" 
+	@echo Finished building: $<
+	
+
+./MT6701.o: .././MT6701.c
 	@echo Building file: $<
 	@echo Invoking: AVR/GNU C Compiler : 5.4.0
 	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG -DDEBUG  -I"C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATtiny_DFP\2.0.368\include"  -Og -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -g2 -Wall -mmcu=attiny1624 -B "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATtiny_DFP\2.0.368\gcc\dev\attiny1624" -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<" 
