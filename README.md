@@ -4,9 +4,11 @@
 ![20250227_173758](https://github.com/user-attachments/assets/d19afbfd-b14b-4bda-8ef5-405ce5096fac)
 ![20250227_173734](https://github.com/user-attachments/assets/851a25cf-c387-4861-8e6a-deb41baafc9a)
 
-1.Desolder MT6701 and 10kΩ resistors from PCB
-2.Cut trace between 8 and 1 pin
-3.Solder back MT6701 only!
+
+1. Desolder MT6701 and 10kΩ resistors from PCB
+2. Cut trace between 8 and 1 pin
+3. Solder back MT6701 only!
+   
 
 * Red wire +5V
 * Black wire GND
